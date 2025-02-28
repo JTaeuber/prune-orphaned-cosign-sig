@@ -1,0 +1,64 @@
+name: prune-orphaned-cosign-sig
+description: Prune orphaned cosign signatures from ghcr
+author: JTaeuber
+branding:
+  icon: "trash-2"
+  color: "green"
+inputs:
+  go_version:
+    description: "version of go to run the action with"
+    required: false
+    type: string
+    default: "1.24.0"
+  gh_token:
+    description: "token for github to run the action with"
+    required: false
+    type: string
+  gh_org:
+    description: "the org where the package is located"
+    required: false
+    type: string
+  package_name:
+    description: "the name of the package where the cosign signatures are located"
+    required: true
+    type: string
+  dryrun:
+    description: "if the action is supposed to run in dryrun"
+    required: false
+    type: string
+    default: "false"
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: ${{ inputs.go_version }}
+
+    - name: Install Dependencies
+      run: |
+        go mod download
+      shell: bash
+
+    - name: Set token
+      shell: bash
+      run: |
+        echo "GH_TOKEN=${{ inputs.gh_token || secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
+
+    - name: Set org
+      shell: bash
+      run: |
+        echo "GH_ORG=${{ inputs.gh_org || github.repository_owner }}" >> $GITHUB_ENV
+
+    - name: Run Go Program
+      run: |
+        go run prunecosign.go
+      shell: bash
+      env:
+        GH_TOKEN: ${{ env.GH_TOKEN }}
+        GH_ORG: ${{ env.GH_ORG }}
+        PACKAGE_NAME: ${{ inputs.package_name }}
+        DRYRUN: ${{ inputs.dryrun }}
