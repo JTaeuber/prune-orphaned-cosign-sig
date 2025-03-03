@@ -4,14 +4,25 @@ on:
   workflow_call:
 
 jobs:
+  test_action_dryrun:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Run Action dryrun
+        uses: ./
+        with:
+          package_name: test-cosign-prune
+          dryrun: "true"
+
   test_action:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Run Local Action
+      - name: Run Action
         uses: ./
         with:
           package_name: test-cosign-prune
-          dryrun: "true"

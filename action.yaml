@@ -43,22 +43,12 @@ runs:
         go mod download
       shell: bash
 
-    - name: Set token
-      shell: bash
-      run: |
-        echo "GH_TOKEN=${{ inputs.gh_token || secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
-
-    - name: Set org
-      shell: bash
-      run: |
-        echo "GH_ORG=${{ inputs.gh_org || github.repository_owner }}" >> $GITHUB_ENV
-
     - name: Run Go Program
       run: |
         go run prunecosign.go
       shell: bash
       env:
-        GH_TOKEN: ${{ env.GH_TOKEN }}
-        GH_ORG: ${{ env.GH_ORG }}
+        GH_TOKEN: ${{ inputs.gh_token }}
+        GH_ORG: ${{ inputs.gh_org }}
         PACKAGE_NAME: ${{ inputs.package_name }}
         DRYRUN: ${{ inputs.dryrun }}
