@@ -12,6 +12,50 @@ import (
 	"golang.org/x/oauth2"
 )
 
+func getSignatures(ctx context.Context, ghOrg string, packageType string, packageName string, client *github.Client) ([]*github.PackageVersion, []string) {
+	if ghOrg != "" {
+		versions, _, err := client.Organizations.PackageGetAllVersions(ctx, ghOrg, packageType, packageName, &github.PackageListOptions{})
+		if err != nil {
+			slog.Error("Error fetching package versions", "Error", err)
+			os.Exit(1)
+		}
+
+		var remain []string
+		for _, version := range versions {
+			remain = append(remain, *version.Name)
+		}
+
+		slog.Info("Fetching Cosign signature tags...")
+
+		s, _, err := client.Organizations.PackageGetAllVersions(ctx, ghOrg, packageType, packageName, &github.PackageListOptions{})
+		if err != nil {
+			slog.Error("Error fetching Cosign signatures:", "Error", err)
+			os.Exit(1)
+		}
+		return s, remain
+	}
+
+	versions, _, err := client.Users.PackageGetAllVersions(ctx, ghOrg, packageType, packageName, &github.PackageListOptions{})
+	if err != nil {
+		slog.Error("Error fetching package versions", "Error", err)
+		os.Exit(1)
+	}
+
+	var remain []string
+	for _, version := range versions {
+		remain = append(remain, *version.Name)
+	}
+
+	slog.Info("Fetching Cosign signature tags...")
+
+	s, _, err := client.Users.PackageGetAllVersions(ctx, ghOrg, packageType, packageName, &github.PackageListOptions{})
+	if err != nil {
+		slog.Error("Error fetching Cosign signatures:", "Error", err)
+		os.Exit(1)
+	}
+	return s, remain
+}
+
 func main() {
 	ghToken := os.Getenv("GH_TOKEN")
 	ghOrg := os.Getenv("GH_ORG")
@@ -54,24 +98,7 @@ func main() {
 
 	slog.Info("Fetching image digests...")
 
-	versions, _, err := client.Organizations.PackageGetAllVersions(ctx, ghOrg, packageType, packageName, &github.PackageListOptions{})
-	if err != nil {
-		slog.Error("Error fetching package versions", "Error", err)
-		os.Exit(1)
-	}
-
-	var remainingDigests []string
-	for _, version := range versions {
-		remainingDigests = append(remainingDigests, *version.Name)
-	}
-
-	slog.Info("Fetching Cosign signature tags...")
-
-	signatures, _, err := client.Organizations.PackageGetAllVersions(ctx, ghOrg, packageType, packageName, &github.PackageListOptions{})
-	if err != nil {
-		slog.Error("Error fetching Cosign signatures:", "Error", err)
-		os.Exit(1)
-	}
+	signatures, remainingDigests := getSignatures(ctx, ghOrg, packageType, packageName, client)
 
 	var signatureVersions []*github.PackageVersion
 	for _, signature := range signatures {
