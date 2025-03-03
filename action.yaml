@@ -5,14 +5,9 @@ branding:
   icon: "trash-2"
   color: "green"
 inputs:
-  go_version:
-    description: "version of go to run the action with"
-    required: false
-    type: string
-    default: "1.24.0"
   gh_token:
     description: "token for github to run the action with"
-    required: false
+    required: true
     type: string
   gh_org:
     description: "the org where the package is located"

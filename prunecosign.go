@@ -63,6 +63,16 @@ func main() {
 	packageType := os.Getenv("PACKAGE_TYPE")
 	dryrun_env := os.Getenv("DRYRUN")
 
+	if ghToken == "" {
+		slog.Error("Missing required environment variable: GH_TOKEN")
+		os.Exit(1)
+	}
+
+	if packageName == "" {
+		slog.Error("Missing required environment variable: IMAGE_NAME")
+		os.Exit(1)
+	}
+
 	if dryrun_env == "" {
 		dryrun_env = "false"
 	}
@@ -72,21 +82,8 @@ func main() {
 		slog.Error("Error parsing bool", "Error", err)
 	}
 
-	if ghToken == "" {
-		ghToken = os.Getenv("GITHUB_TOKEN")
-	}
-
-	if ghOrg == "" {
-		ghOrg = os.Getenv("GITHUB_REPOSITORY_OWNER")
-	}
-
 	if packageType == "" {
 		packageType = "container"
-	}
-
-	if packageName == "" {
-		slog.Error("Missing required environment variable: IMAGE_NAME")
-		os.Exit(1)
 	}
 
 	// Setup GitHub client
