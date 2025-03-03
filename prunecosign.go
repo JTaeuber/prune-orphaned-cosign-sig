@@ -52,10 +52,8 @@ func main() {
 	)
 	client := github.NewClient(oauth2.NewClient(ctx, ts))
 
-	// Fetch image digests
 	slog.Info("Fetching image digests...")
 
-	// Get image versions (digests)
 	versions, _, err := client.Organizations.PackageGetAllVersions(ctx, ghOrg, packageType, packageName, &github.PackageListOptions{})
 	if err != nil {
 		slog.Error("Error fetching package versions", "Error", err)
@@ -67,7 +65,6 @@ func main() {
 		remainingDigests = append(remainingDigests, *version.Name)
 	}
 
-	// Fetch Cosign signature tags
 	slog.Info("Fetching Cosign signature tags...")
 
 	signatures, _, err := client.Organizations.PackageGetAllVersions(ctx, ghOrg, packageType, packageName, &github.PackageListOptions{})
@@ -84,7 +81,6 @@ func main() {
 		}
 	}
 
-	// Prepare to delete orphaned Cosign signatures
 	prunedSigs := "### Pruned Cosign Signatures\n\n"
 	sigDeleted := false
 
@@ -104,7 +100,6 @@ func main() {
 		}
 
 		if !found {
-			// Orphaned signature found, delete it
 			slog.Info("Deleting orphaned signature:", "SignatureTag", sigTag)
 			prunedSigs += fmt.Sprintf("- %s\n", sigTag)
 			sigDeleted = true
@@ -119,14 +114,20 @@ func main() {
 		}
 	}
 
-	// Append to GitHub summary only if signatures were deleted
+	// Append to GitHub summary
+	summaryFile := os.Getenv("GITHUB_STEP_SUMMARY")
+	f, err := os.OpenFile(summaryFile, os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		slog.Error("Could not open summary file", "Error", err)
+	}
+	defer f.Close()
+
 	if sigDeleted {
 		if dryrun {
-			fmt.Println("This is a dry run, no signatures were actually deleted.")
+			f.WriteString("This is a dry run, no signatures were actually deleted.\n\n")
 		}
 
-		fmt.Println("Deleted orphaned signatures")
-		fmt.Println(prunedSigs)
+		f.WriteString(prunedSigs + "\n")
 	} else {
 		fmt.Println("No orphaned signatures found.")
 	}
