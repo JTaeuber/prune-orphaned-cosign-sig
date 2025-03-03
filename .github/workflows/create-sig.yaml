@@ -3,6 +3,11 @@ name: Create orphaned signature
 on:
   push:
 
+permissions:
+  contents: write
+  packages: write
+  security-events: write
+
 jobs:
   create_signature:
     name: create container and signature
@@ -64,10 +69,7 @@ jobs:
   delete_container:
     name: delete container
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      packages: write
-      security-events: write
+    needs: create_signature
     steps:
       - name: Remove container
         uses: vlaurin/action-ghcr-prune@v0.6.0
