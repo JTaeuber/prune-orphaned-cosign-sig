@@ -35,7 +35,15 @@ func getSignatures(ctx context.Context, ghOrg string, packageType string, packag
 		return s, remain
 	}
 
-	versions, _, err := client.Users.PackageGetAllVersions(ctx, ghOrg, packageType, packageName, &github.PackageListOptions{})
+	user, _, err := client.Users.Get(ctx, "")
+	if err != nil {
+		slog.Error("Error fetching authenticated user", "Error", err)
+		os.Exit(1)
+	}
+
+	username := *user.Login
+
+	versions, _, err := client.Users.PackageGetAllVersions(ctx, username, packageType, packageName, &github.PackageListOptions{})
 	if err != nil {
 		slog.Error("Error fetching package versions", "Error", err)
 		os.Exit(1)
@@ -48,7 +56,7 @@ func getSignatures(ctx context.Context, ghOrg string, packageType string, packag
 
 	slog.Info("Fetching Cosign signature tags...")
 
-	s, _, err := client.Users.PackageGetAllVersions(ctx, ghOrg, packageType, packageName, &github.PackageListOptions{})
+	s, _, err := client.Users.PackageGetAllVersions(ctx, username, packageType, packageName, &github.PackageListOptions{})
 	if err != nil {
 		slog.Error("Error fetching Cosign signatures:", "Error", err)
 		os.Exit(1)
