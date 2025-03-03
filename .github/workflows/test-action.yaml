@@ -1,0 +1,14 @@
+name: Test Action
+
+on:
+  workflow_call:
+
+jobs:
+  test_action:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Local Action
+        uses: ./
+        with:
+          package_name: test-cosign-prune
+          dryrun: "true"

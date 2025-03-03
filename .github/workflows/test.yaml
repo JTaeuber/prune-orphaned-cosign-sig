@@ -1,9 +1,0 @@
-name: test
-
-on:
-  workflow_dispatch:
-
-jobs:
-  create_tests:
-    name: test action
-    runs-on: ubuntu-latest
