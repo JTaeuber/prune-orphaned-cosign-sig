@@ -75,7 +75,6 @@ jobs:
         uses: vlaurin/action-ghcr-prune@v0.6.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          organization: jtaeuber
           container: prune-orphaned-cosign-sig
           prune-untagged: true
           prune-tags-regexes: |
