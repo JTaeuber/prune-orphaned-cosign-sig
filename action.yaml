@@ -34,10 +34,14 @@ runs:
 
     - name: Set up Go
       uses: actions/setup-go@v5
+      with:
+        go-version: "1.24.0"
 
     - name: Install Dependencies
       run: |
-        go mod download
+        go mod init prune-cosign-sig
+        go get github.com/google/go-github/v69@v69.2.0
+        go get golang.org/x/oauth2@v0.27.0
       shell: bash
 
     - name: Run Go Program
