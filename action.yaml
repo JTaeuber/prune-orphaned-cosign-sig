@@ -31,6 +31,9 @@ runs:
   steps:
     - name: Checkout Code
       uses: actions/checkout@v4
+      with:
+        repository: jtaeuber/prune-orphaned-cosign-sig
+        ref: v0.2.0
 
     - name: Set up Go
       uses: actions/setup-go@v5
@@ -39,9 +42,7 @@ runs:
 
     - name: Install Dependencies
       run: |
-        [ -f go.mod ] || go mod init prune-cosign-sig
-        go get github.com/google/go-github/v69@v69.2.0
-        go get golang.org/x/oauth2@v0.27.0
+        go mod download
       shell: bash
 
     - name: Run Go Program
