@@ -121,7 +121,7 @@ func main() {
 		}
 	}
 
-	prunedSigs := "## Pruned Cosign Signatures\n\n"
+	prunedSigs := ""
 	sigDeleted := false
 
 	for _, sig := range signatureVersions {
@@ -163,6 +163,7 @@ func main() {
 			f.WriteString(":warning: This is a dry run, no signatures were actually deleted.\n\n")
 		}
 
+		f.WriteString("## Pruned Cosign Signatures\n\n")
 		f.WriteString("| Tag |\n|--------------|\n")
 		f.WriteString(prunedSigs + "\n")
 	} else {
