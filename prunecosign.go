@@ -161,7 +161,7 @@ func main() {
 	if sigDeleted {
 		if dryrun {
 			f.WriteString("This is a dry run, no signatures were actually deleted.\n\n")
-			f.WriteString("Dryrun value:" + dryrun_env)
+			f.WriteString("Dryrun value:" + dryrun_env + "\n")
 		}
 
 		f.WriteString(prunedSigs + "\n")
