@@ -6,7 +6,6 @@ on:
 permissions:
   contents: write
   packages: write
-  security-events: write
 
 jobs:
   test_action_dryrun:

@@ -121,7 +121,7 @@ func main() {
 		}
 	}
 
-	prunedSigs := "### Pruned Cosign Signatures\n\n"
+	prunedSigs := "## Pruned Cosign Signatures\n\n"
 	sigDeleted := false
 
 	for _, sig := range signatureVersions {
@@ -141,7 +141,7 @@ func main() {
 
 		if !found {
 			slog.Info("Deleting orphaned signature:", "SignatureTag", sigTag)
-			prunedSigs += fmt.Sprintf("- %s\n", sigTag)
+			prunedSigs += fmt.Sprintf("| %s |\n", sigTag)
 			sigDeleted = true
 
 			if !dryrun {
@@ -160,10 +160,10 @@ func main() {
 
 	if sigDeleted {
 		if dryrun {
-			f.WriteString("This is a dry run, no signatures were actually deleted.\n\n")
-			f.WriteString("Dryrun value:" + dryrun_env + "\n")
+			f.WriteString(":warning: This is a dry run, no signatures were actually deleted.\n\n")
 		}
 
+		f.WriteString("| Tag |\n|--------------|\n")
 		f.WriteString(prunedSigs + "\n")
 	} else {
 		f.WriteString("No orphaned signatures found.")
