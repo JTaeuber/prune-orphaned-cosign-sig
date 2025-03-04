@@ -8,7 +8,7 @@ permissions:
   packages: write
 
 jobs:
-  test_action_dryrun:
+  test_action:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
