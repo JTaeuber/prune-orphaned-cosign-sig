@@ -56,6 +56,22 @@ func getSignatures(ctx context.Context, ghOrg string, packageType string, packag
 	return s, remain
 }
 
+func deleteSignature(ctx context.Context, ghOrg string, packageType string, packageName string, client *github.Client, id int64) {
+	if ghOrg != "" {
+		_, err := client.Organizations.PackageDeleteVersion(ctx, ghOrg, packageType, packageName, id)
+		if err != nil {
+			slog.Error("Error deleting signature", "Error", err)
+			os.Exit(1)
+		}
+		return
+	}
+	_, err := client.Users.PackageDeleteVersion(ctx, "", packageType, packageName, id)
+	if err != nil {
+		slog.Error("Error deleting signature", "Error", err)
+		os.Exit(1)
+	}
+}
+
 func main() {
 	ghToken := os.Getenv("GH_TOKEN")
 	ghOrg := os.Getenv("GH_ORG")
@@ -129,11 +145,7 @@ func main() {
 			sigDeleted = true
 
 			if !dryrun {
-				_, err := client.Organizations.PackageDeleteVersion(ctx, ghOrg, packageType, packageName, *sig.ID)
-				if err != nil {
-					slog.Error("Error deleting signature", "Error", err)
-					os.Exit(1)
-				}
+				deleteSignature(ctx, ghOrg, packageType, packageName, client, *sig.ID)
 			}
 		}
 	}
@@ -153,6 +165,6 @@ func main() {
 
 		f.WriteString(prunedSigs + "\n")
 	} else {
-		fmt.Println("No orphaned signatures found.")
+		f.WriteString("No orphaned signatures found.")
 	}
 }
