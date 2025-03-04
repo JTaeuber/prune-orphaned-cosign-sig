@@ -31,9 +31,14 @@ runs:
   steps:
     - name: Checkout Code
       uses: actions/checkout@v4
+      with:
+        repository: jtaeuber/prune-orphaned-cosign-sig
+        ref: v0.1.0
 
     - name: Set up Go
       uses: actions/setup-go@v5
+      with:
+        go-version: "1.24.0"
 
     - name: Install Dependencies
       run: |
