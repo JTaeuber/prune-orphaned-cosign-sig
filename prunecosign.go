@@ -164,7 +164,7 @@ func main() {
 		}
 
 		f.WriteString("## Pruned Cosign Signatures\n\n")
-		f.WriteString("| Tag |\n|--------------|\n")
+		f.WriteString("| Tags |\n|--------------|\n")
 		f.WriteString(prunedSigs + "\n")
 	} else {
 		f.WriteString("No orphaned signatures found.")
