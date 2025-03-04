@@ -18,7 +18,7 @@ jobs:
       - name: Run Action dryrun
         uses: ./
         with:
-          package_name: test-cosign-prune
+          package_name: prune-orphaned-cosign-sig
           gh_token: ${{ secrets.GITHUB_TOKEN }}
           dryrun: true
 
@@ -32,5 +32,5 @@ jobs:
       - name: Run Action
         uses: ./
         with:
-          package_name: test-cosign-prune
+          package_name: prune-orphaned-cosign-sig
           gh_token: ${{ secrets.GITHUB_TOKEN }}
