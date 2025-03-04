@@ -12,7 +12,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func getSignatures(ctx context.Context, ghOrg string, packageType string, packageName string, client *github.Client) ([]*github.PackageVersion, []string) {
+func getSignatures(ctx context.Context, ghOrg string, ghUser, packageType string, packageName string, client *github.Client) ([]*github.PackageVersion, []string) {
 	if ghOrg != "" {
 		versions, _, err := client.Organizations.PackageGetAllVersions(ctx, ghOrg, packageType, packageName, &github.PackageListOptions{})
 		if err != nil {
@@ -35,7 +35,7 @@ func getSignatures(ctx context.Context, ghOrg string, packageType string, packag
 		return s, remain
 	}
 
-	versions, _, err := client.Users.PackageGetAllVersions(ctx, "", packageType, packageName, &github.PackageListOptions{})
+	versions, _, err := client.Users.PackageGetAllVersions(ctx, ghUser, packageType, packageName, &github.PackageListOptions{})
 	if err != nil {
 		slog.Error("Error fetching package versions", "Error", err)
 		os.Exit(1)
@@ -48,7 +48,7 @@ func getSignatures(ctx context.Context, ghOrg string, packageType string, packag
 
 	slog.Info("Fetching Cosign signature tags...")
 
-	s, _, err := client.Users.PackageGetAllVersions(ctx, "", packageType, packageName, &github.PackageListOptions{})
+	s, _, err := client.Users.PackageGetAllVersions(ctx, ghUser, packageType, packageName, &github.PackageListOptions{})
 	if err != nil {
 		slog.Error("Error fetching Cosign signatures:", "Error", err)
 		os.Exit(1)
@@ -56,7 +56,7 @@ func getSignatures(ctx context.Context, ghOrg string, packageType string, packag
 	return s, remain
 }
 
-func deleteSignature(ctx context.Context, ghOrg string, packageType string, packageName string, client *github.Client, id int64) {
+func deleteSignature(ctx context.Context, ghOrg string, ghUser string, packageType string, packageName string, client *github.Client, id int64) {
 	if ghOrg != "" {
 		_, err := client.Organizations.PackageDeleteVersion(ctx, ghOrg, packageType, packageName, id)
 		if err != nil {
@@ -65,7 +65,7 @@ func deleteSignature(ctx context.Context, ghOrg string, packageType string, pack
 		}
 		return
 	}
-	_, err := client.Users.PackageDeleteVersion(ctx, "", packageType, packageName, id)
+	_, err := client.Users.PackageDeleteVersion(ctx, ghUser, packageType, packageName, id)
 	if err != nil {
 		slog.Error("Error deleting signature", "Error", err)
 		os.Exit(1)
@@ -75,6 +75,7 @@ func deleteSignature(ctx context.Context, ghOrg string, packageType string, pack
 func main() {
 	ghToken := os.Getenv("GH_TOKEN")
 	ghOrg := os.Getenv("GH_ORG")
+	ghUser := os.Getenv("GH_USER")
 	packageName := os.Getenv("PACKAGE_NAME")
 	packageType := os.Getenv("PACKAGE_TYPE")
 	dryrun_env := os.Getenv("DRYRUN")
@@ -86,6 +87,11 @@ func main() {
 
 	if packageName == "" {
 		slog.Error("Missing required environment variable: IMAGE_NAME")
+		os.Exit(1)
+	}
+
+	if ghOrg != "" && ghUser != "" {
+		slog.Error("Please only provide either a github user or a github org.")
 		os.Exit(1)
 	}
 
@@ -111,7 +117,7 @@ func main() {
 
 	slog.Info("Fetching image digests...")
 
-	signatures, remainingDigests := getSignatures(ctx, ghOrg, packageType, packageName, client)
+	signatures, remainingDigests := getSignatures(ctx, ghOrg, ghUser, packageType, packageName, client)
 
 	var signatureVersions []*github.PackageVersion
 	for _, signature := range signatures {
@@ -145,7 +151,7 @@ func main() {
 			sigDeleted = true
 
 			if !dryrun {
-				deleteSignature(ctx, ghOrg, packageType, packageName, client, *sig.ID)
+				deleteSignature(ctx, ghOrg, ghUser, packageType, packageName, client, *sig.ID)
 			}
 		}
 	}

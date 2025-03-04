@@ -13,6 +13,10 @@ inputs:
     description: "the org where the package is located"
     required: false
     type: string
+  gh_user:
+    description: "name of the user owning the package"
+    required: false
+    type: string
   package_name:
     description: "the name of the package where the cosign signatures are located"
     required: true
@@ -43,5 +47,6 @@ runs:
       env:
         GH_TOKEN: ${{ inputs.gh_token }}
         GH_ORG: ${{ inputs.gh_org }}
+        GH_USER: ${{ inputs.gh_user }}
         PACKAGE_NAME: ${{ inputs.package_name }}
         DRYRUN: ${{ inputs.dryrun }}
