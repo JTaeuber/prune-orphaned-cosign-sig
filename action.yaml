@@ -21,8 +21,8 @@ inputs:
     description: "the name of the package where the cosign signatures are located"
     required: true
     type: string
-  dryrun:
-    description: "if the action is supposed to run in dryrun"
+  dry-run:
+    description: "if the action is supposed to run in dry-run"
     required: false
     type: string
     default: "false"
@@ -49,4 +49,4 @@ runs:
         GH_ORG: ${{ inputs.gh_org }}
         GH_USER: ${{ inputs.gh_user }}
         PACKAGE_NAME: ${{ inputs.package_name }}
-        DRYRUN: ${{ inputs.dryrun }}
+        DRYRUN: ${{ inputs.dry-run }}

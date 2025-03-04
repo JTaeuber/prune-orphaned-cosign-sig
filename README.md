@@ -18,7 +18,7 @@ steps:
       gh_token: ${{ secrets.YOUR_TOKEN }}
       gh_org: your-org
       package_name: your-package
-      dryrun: true # Dry-run first, then change to `false`
+      dry-run: true # Dry-run first, then change to `false`
 ```
 
 ## Permissions
@@ -59,7 +59,7 @@ If neither are provided, then the packages of the authenticated user (cf. `gh_to
 
 **Required** Name of the package for which signatures should be pruned.
 
-### dryrun
+### dry-run
 
 **Optional** Boolean controlling whether to execute the action as a dry-run. When `true` the action will print out details of the version that will be pruned without actually deleting them. Defaults to `false`.
 
