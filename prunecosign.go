@@ -164,12 +164,12 @@ func main() {
 	}
 	defer f.Close()
 
-	if sigDeleted {
-		if dryrun {
-			f.WriteString(":warning: This is a dry run, no signatures were actually deleted.\n\n")
-		}
+	f.WriteString("## Pruned Cosign Signatures\n\n")
+	if dryrun {
+		f.WriteString(":warning: This is a dry run, no signatures were actually deleted.\n\n")
+	}
 
-		f.WriteString("## Pruned Cosign Signatures\n\n")
+	if sigDeleted {
 		f.WriteString("| Tags |\n|--------------|\n")
 		f.WriteString(prunedSigs + "\n")
 	} else {
