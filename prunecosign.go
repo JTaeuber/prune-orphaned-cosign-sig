@@ -86,7 +86,7 @@ func main() {
 	}
 
 	if packageName == "" {
-		slog.Error("Missing required environment variable: IMAGE_NAME")
+		slog.Error("Missing required environment variable: PACKAGE_NAME")
 		os.Exit(1)
 	}
 
