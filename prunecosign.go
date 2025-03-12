@@ -12,51 +12,50 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func getSignatures(ctx context.Context, ghOrg string, ghUser, packageType string, packageName string, client *github.Client) ([]*github.PackageVersion, []string) {
+func getVersions(ctx context.Context, ghOrg, ghUser, packageType, packageName string, client *github.Client) []*github.PackageVersion {
+	opt := &github.PackageListOptions{
+		ListOptions: github.ListOptions{PerPage: 100},
+	}
+
+	var allVersions []*github.PackageVersion
+
 	if ghOrg != "" {
-		versions, _, err := client.Organizations.PackageGetAllVersions(ctx, ghOrg, packageType, packageName, &github.PackageListOptions{})
+		for {
+			versions, resp, err := client.Organizations.PackageGetAllVersions(ctx, ghOrg, packageType, packageName, opt)
+			if err != nil {
+				slog.Error("Error fetching package versions", "Error", err)
+				os.Exit(1)
+			}
+
+			allVersions = append(allVersions, versions...)
+
+			if resp.NextPage == 0 {
+				break
+			}
+			opt.Page = resp.NextPage
+		}
+		return allVersions
+	}
+
+	for {
+		versions, resp, err := client.Users.PackageGetAllVersions(ctx, ghUser, packageType, packageName, opt)
 		if err != nil {
 			slog.Error("Error fetching package versions", "Error", err)
 			os.Exit(1)
 		}
 
-		var remain []string
-		for _, version := range versions {
-			remain = append(remain, *version.Name)
+		allVersions = append(allVersions, versions...)
+
+		if resp.NextPage == 0 {
+			break
 		}
-
-		slog.Info("Fetching Cosign signature tags...")
-
-		s, _, err := client.Organizations.PackageGetAllVersions(ctx, ghOrg, packageType, packageName, &github.PackageListOptions{})
-		if err != nil {
-			slog.Error("Error fetching Cosign signatures:", "Error", err)
-			os.Exit(1)
-		}
-		return s, remain
+		opt.Page = resp.NextPage
 	}
 
-	versions, _, err := client.Users.PackageGetAllVersions(ctx, ghUser, packageType, packageName, &github.PackageListOptions{})
-	if err != nil {
-		slog.Error("Error fetching package versions", "Error", err)
-		os.Exit(1)
-	}
-
-	var remain []string
-	for _, version := range versions {
-		remain = append(remain, *version.Name)
-	}
-
-	slog.Info("Fetching Cosign signature tags...")
-
-	s, _, err := client.Users.PackageGetAllVersions(ctx, ghUser, packageType, packageName, &github.PackageListOptions{})
-	if err != nil {
-		slog.Error("Error fetching Cosign signatures:", "Error", err)
-		os.Exit(1)
-	}
-	return s, remain
+	return allVersions
 }
 
-func deleteSignature(ctx context.Context, ghOrg string, ghUser string, packageType string, packageName string, client *github.Client, id int64) {
+func deleteSignature(ctx context.Context, ghOrg, ghUser, packageType, packageName string, client *github.Client, id int64) {
 	if ghOrg != "" {
 		_, err := client.Organizations.PackageDeleteVersion(ctx, ghOrg, packageType, packageName, id)
 		if err != nil {
@@ -115,15 +114,26 @@ func main() {
 	)
 	client := github.NewClient(oauth2.NewClient(ctx, ts))
 
-	slog.Info("Fetching image digests...")
+	slog.Info("Fetching Cosign signature tags...")
 
-	signatures, remainingDigests := getSignatures(ctx, ghOrg, ghUser, packageType, packageName, client)
+	versions := getVersions(ctx, ghOrg, ghUser, packageType, packageName, client)
+
+	var remainingDigests []string
+	for _, digest := range versions {
+		remainingDigests = append(remainingDigests, *digest.Name)
+	}
 
 	var signatureVersions []*github.PackageVersion
-	for _, signature := range signatures {
+	for _, v := range versions {
+		if len(v.Metadata.Container.Tags) == 0 {
+			// Skip this iteration if no tags are available
+			continue
+		}
+
 		// Check if the tag matches Cosign signature pattern
-		if matched := strings.HasPrefix(signature.Metadata.Container.Tags[0], "sha256-") && strings.HasSuffix(signature.Metadata.Container.Tags[0], ".sig"); matched {
-			signatureVersions = append(signatureVersions, signature)
+		if strings.HasPrefix(v.Metadata.Container.Tags[0], "sha256-") && strings.HasSuffix(v.Metadata.Container.Tags[0], ".sig") {
+			signatureVersions = append(signatureVersions, v)
+			slog.Info("Found Signatures", "Signatures", v.Metadata.Container.Tags[0])
 		}
 	}
 
